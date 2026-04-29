@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>礼品定制大盘数据</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+body{font-family:"PingFang SC","Microsoft YaHei","WenQuanYi Micro Hei",sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:12px;min-height:100vh;-webkit-text-size-adjust:100%}
+.container{max-width:1400px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden}
+.header{background:linear-gradient(135deg,#296BEF 0%,#1e4db8 100%);color:#fff;padding:28px 20px;text-align:center}
+.header h1{font-size:22px;margin-bottom:8px;font-weight:600;line-height:1.35}
+.header p{font-size:13px;opacity:0.9}
+.update-badge{display:inline-block;margin-top:8px;padding:4px 12px;background:rgba(255,255,255,0.2);border-radius:20px;font-size:12px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 14px;background:#f8f9fa}
+.summary-card{background:#fff;padding:14px 8px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center}
+.summary-card .value{font-size:18px;font-weight:700;color:#296BEF;margin:6px 0;word-break:break-all}
+.summary-card .label{font-size:12px;color:#666}
+.content{padding:14px}
+.category-section{margin-bottom:18px;border:1px solid #e8e8e8;border-radius:10px;overflow:hidden}
+.category-header{background:linear-gradient(135deg,#3E79F0 0%,#296BEF 100%);color:#fff;padding:14px 16px;font-size:15px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.category-header .name{flex:1}
+.growth-tag{padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;white-space:nowrap;margin-left:8px;color:#fff}
+.toggle-arrow{margin-left:10px;font-size:12px;transition:transform 0.3s;opacity:0.9}
+.category-header.collapsed .toggle-arrow{transform:rotate(-90deg)}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.category-body{max-height:4000px;transition:max-height 0.35s ease;overflow:hidden}
+.category-body.hide{max-height:0}
+table{width:100%;border-collapse:collapse;min-width:780px}
+th{background:#f8f9fa;color:#333;padding:10px 6px;text-align:center;font-weight:600;border-bottom:2px solid #296BEF;font-size:12px;white-space:nowrap}
+th:first-child{text-align:left;padding-left:12px}
+td{padding:9px 6px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:center;white-space:nowrap}
+td:first-child{text-align:left;padding-left:12px}
+.overall-row{background:#fff9e6!important;font-weight:600}
+.overall-row td{border-top:2px solid #FFAE19;border-bottom:2px solid #FFAE19}
+.metric-good{color:#76C84D;font-weight:600}
+.metric-bad{color:#F76852;font-weight:600}
+.footer{background:#f8f9fa;padding:16px 12px;text-align:center;color:#666;font-size:12px}
+.footer p{line-height:1.6}
+.footer a{color:#8A2BE2;text-decoration:none}
+.loading,.empty,.error{padding:60px 20px;text-align:center;color:#666;font-size:14px}
+.loading .spinner{display:inline-block;width:30px;height:30px;border:3px solid #e8e8e8;border-top-color:#296BEF;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error{color:#F76852}
+.empty{color:#999}
+.snap-btn{position:fixed;right:18px;bottom:22px;z-index:9999;background:linear-gradient(135deg,#296BEF 0%,#1e4db8 100%);color:#fff;border:none;border-radius:30px;padding:12px 18px;font-size:14px;font-weight:600;box-shadow:0 6px 18px rgba(41,107,239,0.45);cursor:pointer;display:flex;align-items:center;gap:6px;transition:transform 0.2s,box-shadow 0.2s;font-family:inherit}
+.snap-btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(41,107,239,0.55)}
+.snap-btn:active{transform:translateY(0)}
+.snap-btn:disabled{opacity:0.7;cursor:not-allowed;transform:none}
+.snap-btn .icon{font-size:16px}
+.snap-mask{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex-direction:column;gap:14px}
+.snap-mask .spinner{width:38px;height:38px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@media(max-width:600px){.snap-btn{right:12px;bottom:16px;padding:10px 14px;font-size:13px}}
+@media(min-width:768px){
+  body{padding:20px}
+  .header{padding:40px}
+  .header h1{font-size:30px}
+  .header p{font-size:15px}
+  .summary{grid-template-columns:repeat(6,1fr);gap:15px;padding:28px}
+  .summary-card{padding:20px 12px}
+  .summary-card .value{font-size:22px}
+  .summary-card .label{font-size:13px}
+  .content{padding:28px}
+  .category-header{padding:18px 22px;font-size:18px}
+  .growth-tag{font-size:13px;padding:5px 12px}
+  th,td{font-size:13px;padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1 id="reportTitle">礼品定制大盘数据</h1>
+    <p id="reportSubtitle">数据加载中...</p>
+    <div class="update-badge" id="updateBadge" style="display:none"></div>
+  </div>
+  <div class="summary" id="summary"></div>
+  <div class="content" id="content">
+    <div class="loading"><div class="spinner"></div><div>数据加载中，请稍候...</div></div>
+  </div>
+  <div class="footer">
+    <p id="footerInfo">数据来源: 腾讯广告数仓</p>
+    <p style="margin-top:5px;font-size:11px;color:#999">说明: 数值以"最低值~最高值"区间形式展示; 绿色数字表示表现优秀(CTR≥1.5%或CVR≥1.0%); 空值显示为"—"</p>
+    <p style="margin-top:10px">由 <a href="https://with.woa.com/" style="color: #8A2BE2;" target="_blank">With</a> 通过自然语言生成</p>
+  </div>
+</div>
+
+<!-- 一键截长图按钮 -->
+<button class="snap-btn" id="snapBtn" title="保存整个页面为长图">
+  <span class="icon">📷</span><span>保存长图</span>
+</button>
+
+<!-- html2canvas 库（CDN） -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<!-- ========== 本周报告数据（每周只需修改此处） ========== -->
+<script>
+  window.__REPORT_DATA__ = {
+    "reportDate": "2026-04-29",
+    "title": "礼品定制品类x流量版位数据报告",
+    "subtitle": "数据时间范围: 近7天 | 生成时间: 2026-04-29",
+    "summary": [
+      {"label": "覆盖品类", "value": "9"},
+      {"label": "点击率", "value": "0.7%~1.2%"},
+      {"label": "转化率", "value": "0.8%~1.5%"},
+      {"label": "下单率", "value": "0.7%~1.4%"},
+      {"label": "加企微成本", "value": "¥54~¥77"},
+      {"label": "下单成本", "value": "¥350~¥500"}
+    ],
+    "categories": [
+      {
+        "name": "1. 锤子画",
+        "tag": "平稳",
+        "tagColor": "#FFAE19",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "0.9%~1.1%", "cvr": "0.9%~1.3%", "order": "0.9%~1.2%", "wxCost": "¥50.5~¥66.5", "orderCost": "¥330.2~¥430.7", "ctrGood": false, "cvrGood": true},
+          {"pos": "微信朋友圈", "ctr": "0.7%~1.0%", "cvr": "0.2%~0.3%", "order": "0.2%~0.3%", "wxCost": "¥77.7~¥94.8", "orderCost": "¥518.3~¥558.3", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信公众号", "ctr": "1.5%~2.6%", "cvr": "0.5%~1.5%", "order": "0.5%~1.4%", "wxCost": "¥53.8~¥81.8", "orderCost": "¥272.0~¥575.2", "ctrGood": true, "cvrGood": true},
+          {"pos": "平台与内容广告", "ctr": "4.3%~5.3%", "cvr": "0.1%~0.2%", "order": "0.1%~0.2%", "wxCost": "¥97.2", "orderCost": "¥777.8", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信搜一搜", "ctr": "2.9%~22.9%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥40.7~¥205.5", "orderCost": "¥121.7~¥130.5", "ctrGood": true, "cvrGood": false},
+          {"pos": "搜索广告", "ctr": "6.5%~10.6%", "cvr": "0.0%~0.2%", "order": "0.0%~0.2%", "wxCost": "¥35.5~¥68.7", "orderCost": "¥113.1~¥128.0", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信小程序", "ctr": "0.9%~1.2%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥39.0~¥80.3", "orderCost": "¥80.3", "ctrGood": false, "cvrGood": false},
+          {"pos": "移动联盟", "ctr": "3.8%~4.6%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥176.0", "orderCost": "—", "ctrGood": true, "cvrGood": false}
+        ],
+        "overall": {"ctr": "0.9%~1.2%", "cvr": "0.8%~1.2%", "order": "0.8%~1.1%", "wxCost": "¥55~¥70", "orderCost": "¥340~¥440"}
+      },
+      {
+        "name": "2. 吊牌项链",
+        "tag": "减缓",
+        "tagColor": "#F76852",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "0.6%~1.0%", "cvr": "1.0%~1.6%", "order": "1.0%~1.6%", "wxCost": "¥66.5~¥85.2", "orderCost": "¥355.5~¥512.0", "ctrGood": false, "cvrGood": true},
+          {"pos": "微信公众号", "ctr": "1.1%~1.8%", "cvr": "0.0%~2.6%", "order": "0.0%~2.6%", "wxCost": "¥55.0~¥89.0", "orderCost": "¥244.7~¥514.4", "ctrGood": false, "cvrGood": true},
+          {"pos": "微信朋友圈", "ctr": "1.2%~3.5%", "cvr": "0.0%~0.5%", "order": "0.0%~0.5%", "wxCost": "¥126.9~¥185.3", "orderCost": "¥318.8~¥1111.8", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信小程序", "ctr": "0.6%~0.9%", "cvr": "0.0%~1.7%", "order": "0.0%~1.7%", "wxCost": "¥83.2~¥176.4", "orderCost": "¥293.6~¥881.9", "ctrGood": false, "cvrGood": true},
+          {"pos": "微信搜一搜", "ctr": "4.4%~22.0%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥31.3~¥59.2", "orderCost": "¥59.2", "ctrGood": true, "cvrGood": false},
+          {"pos": "平台与内容广告", "ctr": "0.0%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "搜索广告", "ctr": "0.4%~3.6%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "移动联盟", "ctr": "8.0%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false}
+        ],
+        "overall": {"ctr": "0.7%~1.2%", "cvr": "0.9%~1.6%", "order": "0.9%~1.6%", "wxCost": "¥68~¥92", "orderCost": "¥355~¥520"}
+      },
+      {
+        "name": "3. 3D真人手办",
+        "tag": "减缓",
+        "tagColor": "#F76852",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "1.4%~1.8%", "cvr": "0.6%~0.8%", "order": "0.6%~0.8%", "wxCost": "¥21.9~¥80.3", "orderCost": "¥533.9~¥1109.2", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信朋友圈", "ctr": "1.7%", "cvr": "0.1%", "order": "0.1%", "wxCost": "¥183.4", "orderCost": "¥1833.8", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信公众号", "ctr": "0.6%~2.4%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥36.2~¥51.7", "orderCost": "¥88.7~¥119.0", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信搜一搜", "ctr": "7.4%~11.8%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥4.4~¥42.7", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "搜索广告", "ctr": "1.8%~4.6%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "移动联盟", "ctr": "24.1%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信小程序", "ctr": "0.0%~0.3%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "平台与内容广告", "ctr": "3.2%~5.0%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false}
+        ],
+        "overall": {"ctr": "1.4%~1.8%", "cvr": "0.5%~0.7%", "order": "0.5%~0.7%", "wxCost": "¥35~¥85", "orderCost": "¥560~¥1180"}
+      },
+      {
+        "name": "4. 投影项链",
+        "tag": "高增速",
+        "tagColor": "#76C84D",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "0.6%~0.8%", "cvr": "1.1%", "order": "1.1%", "wxCost": "¥36.5~¥43.4", "orderCost": "¥379.8~¥466.8", "ctrGood": false, "cvrGood": true},
+          {"pos": "微信朋友圈", "ctr": "0.5%", "cvr": "0.6%", "order": "0.6%", "wxCost": "¥36.0", "orderCost": "¥417.9", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信公众号", "ctr": "1.2%", "cvr": "1.6%", "order": "1.6%", "wxCost": "¥31.9", "orderCost": "¥272.8", "ctrGood": false, "cvrGood": true},
+          {"pos": "移动联盟", "ctr": "3.1%~4.0%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥245.2", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信小程序", "ctr": "0.9%~1.5%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "搜索广告", "ctr": "1.3%~1.7%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信搜一搜", "ctr": "28.6%~100.0%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "平台与内容广告", "ctr": "0.8%~2.7%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false}
+        ],
+        "overall": {"ctr": "0.6%~0.9%", "cvr": "1.0%~1.2%", "order": "1.0%~1.2%", "wxCost": "¥36~¥44", "orderCost": "¥370~¥460"}
+      },
+      {
+        "name": "5. 铜像定制",
+        "tag": "平稳",
+        "tagColor": "#FFAE19",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "1.2%~1.4%", "cvr": "2.6%~3.1%", "order": "0.0%", "wxCost": "¥40.4~¥44.3", "orderCost": "—", "ctrGood": false, "cvrGood": true},
+          {"pos": "微信公众号", "ctr": "3.7%", "cvr": "2.5%", "order": "0.0%", "wxCost": "¥68.0", "orderCost": "—", "ctrGood": true, "cvrGood": true}
+        ],
+        "overall": {"ctr": "1.3%~1.5%", "cvr": "2.6%~3.0%", "order": "0.0%", "wxCost": "¥42~¥46", "orderCost": "—"}
+      },
+      {
+        "name": "6. 陶泥人偶",
+        "tag": "平稳",
+        "tagColor": "#FFAE19",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "0.4%~1.0%", "cvr": "0.0%~0.6%", "order": "0.0%~0.8%", "wxCost": "¥95.8~¥182.2", "orderCost": "¥553.8~¥766.4", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信朋友圈", "ctr": "0.9%~1.1%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信公众号", "ctr": "1.3%~2.0%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥146.6", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "搜索广告", "ctr": "2.2%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信搜一搜", "ctr": "0.0%", "cvr": "—", "order": "—", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false}
+        ],
+        "overall": {"ctr": "0.4%~1.0%", "cvr": "0.0%~0.6%", "order": "0.0%~0.8%", "wxCost": "¥95~¥180", "orderCost": "¥550~¥760"}
+      },
+      {
+        "name": "7. 沙画",
+        "tag": "高增速",
+        "tagColor": "#76C84D",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "0.6%~0.7%", "cvr": "0.0%~0.6%", "order": "0.0%~0.6%", "wxCost": "¥57.9", "orderCost": "¥927.1", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信公众号", "ctr": "0.4%~0.6%", "cvr": "0.0%~0.4%", "order": "0.0%~0.4%", "wxCost": "¥69.1~¥147.4", "orderCost": "¥345.5", "ctrGood": false, "cvrGood": false},
+          {"pos": "移动联盟", "ctr": "4.4%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥55.0", "orderCost": "—", "ctrGood": true, "cvrGood": false}
+        ],
+        "overall": {"ctr": "0.5%~0.7%", "cvr": "0.0%~0.5%", "order": "0.0%~0.5%", "wxCost": "¥60~¥100", "orderCost": "¥700~¥930"}
+      },
+      {
+        "name": "8. 名字画",
+        "tag": "高增速",
+        "tagColor": "#76C84D",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "0.6%", "cvr": "1.8%", "order": "1.8%", "wxCost": "¥56.4", "orderCost": "¥451.0", "ctrGood": false, "cvrGood": true},
+          {"pos": "微信朋友圈", "ctr": "1.5%", "cvr": "0.0%", "order": "0.0%", "wxCost": "¥131.0", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信公众号", "ctr": "0.4%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "平台与内容广告", "ctr": "4.1%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "搜索广告", "ctr": "1.3%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": false, "cvrGood": false},
+          {"pos": "微信搜一搜", "ctr": "13.3%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "移动联盟", "ctr": "3.2%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false}
+        ],
+        "overall": {"ctr": "0.6%~0.8%", "cvr": "1.5%~1.8%", "order": "1.5%~1.8%", "wxCost": "¥56~¥70", "orderCost": "¥450~¥460"}
+      },
+      {
+        "name": "9. 手串定制",
+        "tag": "高增速",
+        "tagColor": "#76C84D",
+        "rows": [
+          {"pos": "微信视频号", "ctr": "2.1%~3.4%", "cvr": "2.8%~2.9%", "order": "0.0%", "wxCost": "¥22.2", "orderCost": "—", "ctrGood": true, "cvrGood": true},
+          {"pos": "微信公众号", "ctr": "5.8%~5.9%", "cvr": "0.0%~2.0%", "order": "0.0%", "wxCost": "¥18.2", "orderCost": "—", "ctrGood": true, "cvrGood": true},
+          {"pos": "微信朋友圈", "ctr": "3.4%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false},
+          {"pos": "微信搜一搜", "ctr": "0.0%~14.7%", "cvr": "0.0%", "order": "0.0%", "wxCost": "—", "orderCost": "—", "ctrGood": true, "cvrGood": false}
+        ],
+        "overall": {"ctr": "2.2%~3.5%", "cvr": "2.6%~2.8%", "order": "0.0%", "wxCost": "¥21~¥23", "orderCost": "—"}
+      }
+    ],
+    "totalOverall": {
+      "name": "全部品类",
+      "ctr": "0.7%~1.2%",
+      "cvr": "0.8%~1.5%",
+      "order": "0.7%~1.4%",
+      "wxCost": "¥54~¥77",
+      "orderCost": "¥350~¥500"
+    }
+  };
+  window.__REPORT_UPDATED_AT__ = "2026-04-29";
+</script>
+<!-- ========== 渲染逻辑（通常无需修改） ========== -->
+<script>
+function el(id) { return document.getElementById(id); }
+function setText(id, text) { const node = el(id); if (node) node.textContent = text || ''; }
+function showEmpty() { el('content').innerHTML = '<div class="empty">📭 暂无数据</div>'; }
+
+function renderSummary(summary) {
+  if (!Array.isArray(summary) || summary.length === 0) { el('summary').innerHTML = ''; return; }
+  el('summary').innerHTML = summary.map(function(item){
+    return '<div class="summary-card"><div class="label">' + (item.label||'') + '</div><div class="value">' + (item.value||'—') + '</div></div>';
+  }).join('');
+}
+
+function renderCategory(cat, idx) {
+  var rows = Array.isArray(cat.rows) ? cat.rows : [];
+  var rowsHtml = rows.map(function(row, rIdx){
+    var alpha = Math.max(0.3, 1 - rIdx * 0.1);
+    var ctrClass = row.ctrGood ? 'metric-good' : '';
+    var cvrClass = row.cvrGood ? 'metric-good' : '';
+    return '<tr style="background:rgba(232,240,254,'+alpha+')">'
+      + '<td>' + (row.pos||'—') + '</td>'
+      + '<td class="'+ctrClass+'">' + (row.ctr||'—') + '</td>'
+      + '<td class="'+cvrClass+'">' + (row.cvr||'—') + '</td>'
+      + '<td>' + (row.order||'—') + '</td>'
+      + '<td>' + (row.wxCost||'—') + '</td>'
+      + '<td>' + (row.orderCost||'—') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var ov = cat.overall || {};
+  var overallHtml = '<tr class="overall-row">'
+    + '<td><strong>整体</strong></td>'
+    + '<td><strong>' + (ov.ctr||'—') + '</strong></td>'
+    + '<td><strong>' + (ov.cvr||'—') + '</strong></td>'
+    + '<td><strong>' + (ov.order||'—') + '</strong></td>'
+    + '<td><strong>' + (ov.wxCost||'—') + '</strong></td>'
+    + '<td><strong>' + (ov.orderCost||'—') + '</strong></td>'
+    + '</tr>';
+
+  var tag = cat.tag || cat.growth || '';
+  var tagColor = cat.tagColor || cat.growthColor || '#999';
+
+  return '<div class="category-section">'
+    + '<div class="category-header" data-idx="'+idx+'">'
+    +   '<span class="name">' + (cat.name||'') + '</span>'
+    +   (tag ? '<span class="growth-tag" style="background:'+tagColor+'">'+tag+'</span>' : '')
+    +   '<span class="toggle-arrow">▼</span>'
+    + '</div>'
+    + '<div class="category-body"><div class="table-wrap"><table>'
+    +   '<thead><tr>'
+    +     '<th style="width:22%">流量版位</th><th style="width:14%">CTR</th><th style="width:14%">CVR</th>'
+    +     '<th style="width:14%">下单率</th><th style="width:18%">加企微成本</th><th style="width:18%">下单成本</th>'
+    +   '</tr></thead>'
+    +   '<tbody>' + rowsHtml + overallHtml + '</tbody>'
+    + '</table></div></div></div>';
+}
+
+function renderTotal(t) {
+  if (!t) return '';
+  return '<div class="category-section" style="border:2px solid #FFAE19">'
+    + '<div class="category-header" style="background:linear-gradient(135deg,#FFAE19 0%,#ff8c00 100%)" data-idx="total">'
+    +   '<span class="name">全品类汇总</span><span class="toggle-arrow">▼</span>'
+    + '</div>'
+    + '<div class="category-body"><div class="table-wrap"><table><tbody><tr class="overall-row">'
+    +   '<td style="width:22%"><strong>' + (t.name||'全部品类') + '</strong></td>'
+    +   '<td style="width:14%"><strong>' + (t.ctr||'—') + '</strong></td>'
+    +   '<td style="width:14%"><strong>' + (t.cvr||'—') + '</strong></td>'
+    +   '<td style="width:14%"><strong>' + (t.order||'—') + '</strong></td>'
+    +   '<td style="width:18%"><strong>' + (t.wxCost||'—') + '</strong></td>'
+    +   '<td style="width:18%"><strong>' + (t.orderCost||'—') + '</strong></td>'
+    + '</tr></tbody></table></div></div></div>';
+}
+
+function bindToggle() {
+  el('content').addEventListener('click', function(e){
+    var header = e.target.closest('.category-header');
+    if (!header) return;
+    var body = header.nextElementSibling;
+    if (!body) return;
+    header.classList.toggle('collapsed');
+    body.classList.toggle('hide');
+  });
+}
+
+function renderPayload(payload, meta) {
+  meta = meta || {};
+  setText('reportTitle', payload.title || '礼品定制大盘数据');
+  setText('reportSubtitle', payload.subtitle || ('数据日期: ' + (payload.reportDate||'-')));
+
+  var updatedAt = meta.updatedAt || payload.reportDate || '';
+  if (updatedAt) {
+    var badge = el('updateBadge');
+    badge.textContent = '📅 更新于 ' + updatedAt;
+    badge.style.display = 'inline-block';
+  }
+  setText('footerInfo', '数据来源: 腾讯广告数仓 | 报告生成时间: ' + (updatedAt || payload.reportDate || '-'));
+
+  renderSummary(payload.summary);
+  var categories = Array.isArray(payload.categories) ? payload.categories : [];
+  var html = categories.map(function(c,i){return renderCategory(c,i);}).join('') + renderTotal(payload.totalOverall);
+  if (!html) { showEmpty(); return; }
+  el('content').innerHTML = html;
+  bindToggle();
+}
+
+function boot() {
+  if (window.__REPORT_DATA__ && typeof window.__REPORT_DATA__ === 'object') {
+    try {
+      renderPayload(window.__REPORT_DATA__, { updatedAt: window.__REPORT_UPDATED_AT__ || window.__REPORT_DATA__.reportDate });
+      return;
+    } catch (e) { console.error('渲染失败：', e); }
+  }
+  showEmpty();
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+
+<!-- ========== 一键保存长图 ========== -->
+<script>
+(function(){
+  var btn = document.getElementById('snapBtn');
+  if (!btn) return;
+
+  function showMask(text){
+    var mask = document.getElementById('snapMask');
+    if (!mask){
+      mask = document.createElement('div');
+      mask.id = 'snapMask';
+      mask.className = 'snap-mask';
+      mask.innerHTML = '<div class="spinner"></div><div id="snapMaskText"></div>';
+      document.body.appendChild(mask);
+    }
+    document.getElementById('snapMaskText').textContent = text || '生成中...';
+    mask.style.display = 'flex';
+  }
+  function hideMask(){
+    var mask = document.getElementById('snapMask');
+    if (mask) mask.style.display = 'none';
+  }
+
+  btn.addEventListener('click', async function(){
+    if (typeof html2canvas === 'undefined'){
+      alert('截图组件加载失败，请检查网络后刷新重试');
+      return;
+    }
+    document.querySelectorAll('.category-header.collapsed').forEach(function(h){
+      h.classList.remove('collapsed');
+      var body = h.nextElementSibling;
+      if (body) body.classList.remove('hide');
+    });
+
+    btn.disabled = true;
+    showMask('正在生成长图，请稍候...');
+    await new Promise(function(r){ setTimeout(r, 400); });
+
+    try {
+      var target = document.querySelector('.container');
+      var canvas = await html2canvas(target, {
+        backgroundColor: '#ffffff',
+        scale: Math.min(window.devicePixelRatio || 2, 2),
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        windowWidth: target.scrollWidth,
+        windowHeight: target.scrollHeight
+      });
+
+      var filename = '礼品定制数据报告_' + (window.__REPORT_UPDATED_AT__ || new Date().toISOString().slice(0,10)) + '.png';
+
+      if (canvas.toBlob){
+        canvas.toBlob(function(blob){
+          if (!blob){ downloadFromDataUrl(canvas.toDataURL('image/png'), filename); return; }
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = filename;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+        }, 'image/png');
+      } else {
+        downloadFromDataUrl(canvas.toDataURL('image/png'), filename);
+      }
+    } catch (err){
+      console.error('截图失败:', err);
+      alert('截图失败：' + (err && err.message ? err.message : err));
+    } finally {
+      hideMask();
+      btn.disabled = false;
+    }
+  });
+
+  function downloadFromDataUrl(dataUrl, filename){
+    var a = document.createElement('a');
+    a.href = dataUrl; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+})();
+</script>
+</body>
+</html>
